@@ -33,8 +33,8 @@ void GLAPIENTRY MessageCallback(GLenum source,
 #define TILES_COL 10
 #define TILE_WIDTH (SHEET_WIDTH / TILES_ROW)
 #define TILE_HEIGHT (SHEET_HEIGHT / TILES_COL)
-#define TILE_UV_WIDTH ((1.0f / SHEET_WIDTH) / TILES_ROW)
-#define TILE_UV_HEIGHT ((1.0f / SHEET_HEIGHT) / TILES_COL)
+#define TILE_UV_WIDTH (1.0f / TILES_ROW)
+#define TILE_UV_HEIGHT (1.0f / TILES_COL)
 
 static Renderer renderer = {0};
 
@@ -98,8 +98,8 @@ int main() {
         
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
         stbi_image_free(pixels);
@@ -132,7 +132,14 @@ int main() {
         glUniform2f(renderer.uniforms[UNIFORM_SLOT_RESOLUTION], (float) w, (float) h);
 
         // rendererRect(&renderer, vec2fs(0.0f), vec2fs(300.0f), vec4fs(1.0f));
-        rendererTexturedRect(&renderer, vec2fs(0.0f), vec2fs(300.0f), vec2fs(0.0f), vec2f(TILE_UV_WIDTH, TILE_UV_HEIGHT), vec4fs(1.0f));
+        const float zoom = 2.0f;
+        for (int y = 0; y < 10; y++) {
+            for (int x = 0; x < 10; x++) {
+                Vec2f tilePos = vec2f(x * TILE_WIDTH, y * TILE_HEIGHT);
+                Vec2f screenPos = vec2f(0.5f * tilePos.x * TILE_WIDTH - 0.5f * tilePos.y * TILE_WIDTH, 0.25f * tilePos.x * TILE_HEIGHT + 0.25f * tilePos.y * TILE_HEIGHT);
+                rendererTexturedRect(&renderer, screenPos, vec2f(TILE_WIDTH, TILE_HEIGHT), vec2fs(0.0f), vec2f(TILE_UV_WIDTH, TILE_UV_HEIGHT), vec4fs(1.0f));
+            }
+        }
 
         rendererFlush(&renderer);
 
