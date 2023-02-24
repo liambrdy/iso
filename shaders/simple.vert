@@ -9,9 +9,11 @@ out vec2 fragUv;
 out vec4 fragColor;
 
 uniform vec2 resolution;
+uniform vec2 cameraPos;
+uniform float cameraZoom;
 
 vec2 projectPoint(vec2 p) {
-    return 2.0 * p / resolution;
+    return 2.0 * (p - cameraPos) * cameraZoom / resolution;
 }
 
 void main() {

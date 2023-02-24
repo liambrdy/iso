@@ -37,9 +37,17 @@ static const UniformDef uniformDefs[COUNT_UNIFORM_SLOT] = {
     [UNIFORM_SLOT_RESOLUTION] = {
         .slot = UNIFORM_SLOT_RESOLUTION,
         .name = "resolution"
+    },
+    [UNIFORM_SLOT_CAMERA_POS] = {
+        .slot = UNIFORM_SLOT_CAMERA_POS,
+        .name = "cameraPos"
+    },
+    [UNIFORM_SLOT_CAMERA_ZOOM] = {
+        .slot = UNIFORM_SLOT_CAMERA_ZOOM,
+        .name = "cameraZoom"
     }
 };
-static_assert(COUNT_UNIFORM_SLOT == 1, "More uniform slots have been added");
+static_assert(COUNT_UNIFORM_SLOT == 3, "More uniform slots have been added");
 
 static const char *shaderTypeAsCStr(GLuint shader) {
     switch (shader) {

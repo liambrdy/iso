@@ -27,16 +27,46 @@ void GLAPIENTRY MessageCallback(GLenum source,
     fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n", (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
 }
 
-#define SHEET_WIDTH 176
-#define SHEET_HEIGHT 170
-#define TILES_ROW 11
-#define TILES_COL 10
+#define SHEET_WIDTH 192
+#define SHEET_HEIGHT 288
+#define TILES_ROW 6
+#define TILES_COL 9
 #define TILE_WIDTH (SHEET_WIDTH / TILES_ROW)
 #define TILE_HEIGHT (SHEET_HEIGHT / TILES_COL)
 #define TILE_UV_WIDTH (1.0f / TILES_ROW)
 #define TILE_UV_HEIGHT (1.0f / TILES_COL)
 
+typedef struct {
+    Vec2i location;
+    Vec2i texture;
+    float yOffset;
+} Tile;
+
+#define TILE_MAX 500
+
 static Renderer renderer = {0};
+static Vec2f cameraPos = {0};
+static float cameraZoom = 1.0f;
+static Tile tiles[TILE_MAX];
+static size_t tileCount = 0;
+
+static int cmpTile(const void *a, const void *b) {
+    Tile ta = *(const Tile *)a;
+    Tile tb = *(const Tile *)b;
+    return ta.location.x + ta.location.y < tb.location.x + tb.location.y;
+}
+
+void renderTiles(Tile *t, size_t tCount) {
+    for (size_t i = 0; i < tCount; i++) {
+        Tile tile = t[i];
+        Vec2f screenPos = vec2f(0.5f * tile.location.x * TILE_WIDTH - 0.5f * tile.location.y * TILE_WIDTH, 0.25f * tile.location.x * TILE_HEIGHT + 0.25f * tile.location.y * TILE_HEIGHT + tile.yOffset);
+        rendererTexturedRect(&renderer, screenPos, vec2f(TILE_WIDTH, TILE_HEIGHT), vec2f(tile.texture.x * TILE_UV_WIDTH, tile.texture.y * TILE_UV_HEIGHT), vec2f(TILE_UV_WIDTH, TILE_UV_HEIGHT), vec4fs(1.0f));
+    }
+}
+
+void screenToTile(Vec2f screen) {
+    
+}
 
 int main() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -82,6 +112,18 @@ int main() {
 
     rendererInit(&renderer);
 
+    for (int y = -10; y < 10; y++) {
+        for (int x = -10; x < 10; x++) {
+            Tile t = {
+                .location = vec2i(x, y),
+                .texture = vec2i(x % TILES_ROW, y % TILES_COL),
+                .yOffset = 0.0f
+            };
+            tiles[tileCount++] = t;
+        }
+    }
+    qsort(tiles, tileCount, sizeof(Tile), cmpTile);
+
     GLuint texture;
     {
         int w, h, c;
@@ -111,6 +153,8 @@ int main() {
 
     int w, h;
 
+    cameraZoom = 3.0f;
+
     bool running = true;
     while (running) {
         const Uint32 start = SDL_GetTicks();
@@ -127,19 +171,20 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         SDL_GetWindowSize(window, &w, &h);
+        glViewport(0, 0, w, h);
+
+        for (size_t i = 0; i < tileCount; i++) {
+            Tile *t = &tiles[i];
+            t->yOffset = 5.0f * (sin(SDL_GetTicks() * 0.01f + t->location.y) + cos(SDL_GetTicks() * 0.01f + t->location.x));
+        }
 
         rendererUse(&renderer);
         glUniform2f(renderer.uniforms[UNIFORM_SLOT_RESOLUTION], (float) w, (float) h);
+        glUniform2f(renderer.uniforms[UNIFORM_SLOT_CAMERA_POS], cameraPos.x, cameraPos.y);
+        glUniform1f(renderer.uniforms[UNIFORM_SLOT_CAMERA_ZOOM], cameraZoom);
 
         // rendererRect(&renderer, vec2fs(0.0f), vec2fs(300.0f), vec4fs(1.0f));
-        const float zoom = 2.0f;
-        for (int y = 0; y < 10; y++) {
-            for (int x = 0; x < 10; x++) {
-                Vec2f tilePos = vec2f(x * TILE_WIDTH, y * TILE_HEIGHT);
-                Vec2f screenPos = vec2f(0.5f * tilePos.x * TILE_WIDTH - 0.5f * tilePos.y * TILE_WIDTH, 0.25f * tilePos.x * TILE_HEIGHT + 0.25f * tilePos.y * TILE_HEIGHT);
-                rendererTexturedRect(&renderer, screenPos, vec2f(TILE_WIDTH, TILE_HEIGHT), vec2fs(0.0f), vec2f(TILE_UV_WIDTH, TILE_UV_HEIGHT), vec4fs(1.0f));
-            }
-        }
+        renderTiles(tiles, tileCount);
 
         rendererFlush(&renderer);
 

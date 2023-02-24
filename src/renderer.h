@@ -8,6 +8,8 @@
 
 typedef enum {
     UNIFORM_SLOT_RESOLUTION = 0,
+    UNIFORM_SLOT_CAMERA_POS = 1,
+    UNIFORM_SLOT_CAMERA_ZOOM = 2,
     COUNT_UNIFORM_SLOT
 } UniformSlot;
 
