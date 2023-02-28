@@ -66,10 +66,6 @@ void renderTiles(Tile *t, size_t tCount) {
     }
 }
 
-void screenToTile(Vec2f screen) {
-    
-}
-
 void addTile(Vec2i tile, Vec2i texture, float yOff) {
     assert(tileCount < TILE_MAX);
     Tile t = {
@@ -80,7 +76,10 @@ void addTile(Vec2i tile, Vec2i texture, float yOff) {
     tiles[tileCount++] = t;
 }
 
-int main() {
+int main(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "ERROR: Failed to initialize SDL: %s\n", SDL_GetError());
         return 1;
@@ -136,7 +135,7 @@ int main() {
     {
         int w, h, c;
         stbi_set_flip_vertically_on_load(1);
-        char *pixels = stbi_load("tiles.png", &w, &h, &c, STBI_rgb_alpha);
+        stbi_uc *pixels = stbi_load("tiles.png", &w, &h, &c, STBI_rgb_alpha);
         if (pixels == NULL) {
             fprintf(stderr, "Failed to load texture file %s: %s\n", "tiles.png", stbi_failure_reason());
             return 1;
@@ -155,9 +154,9 @@ int main() {
         stbi_image_free(pixels);
     }
 
-    Uint64 now = SDL_GetPerformanceCounter();
-    Uint64 last = 0;
-    float dt = DELTA_TIME;
+    // Uint64 now = SDL_GetPerformanceCounter();
+    // Uint64 last = 0;
+    // float dt = DELTA_TIME;
 
     int w, h;
 
@@ -173,14 +172,13 @@ int main() {
                     running = false;
                 } break;
 
-                case SDL_KEYDOWN: {
-                    const float UNITS = 100.0f;
-                    switch (event.key.keysym.sym) {
-                    }
-                } break;
+                // case SDL_KEYDOWN: {
+                //     switch (event.key.keysym.sym) {
+                //     }
+                // } break;
 
                 case SDL_MOUSEWHEEL: {
-                    cameraZoom += event.wheel.y * 0.5f;
+                    cameraZoom += (float) event.wheel.y * 0.5f;
                     cameraZoom = clampf(cameraZoom, 0.5f, 10.0f);
                 } break;
 
@@ -227,9 +225,9 @@ int main() {
 
         SDL_GL_SwapWindow(window);
 
-        last = now;
-        now = SDL_GetPerformanceCounter();
-        float dt = (float)((now - last)*1000 / (float)SDL_GetPerformanceFrequency());
+        // last = now;
+        // now = SDL_GetPerformanceCounter();
+        // float dt = (float)((now - last)*1000 / (float)SDL_GetPerformanceFrequency());
 
         const Uint32 duration = SDL_GetTicks() - start;
         const Uint32 deltaTime = 1000 / FPS;
