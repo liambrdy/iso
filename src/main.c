@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include <SDL2/SDL.h>
 
@@ -42,10 +43,11 @@ typedef struct {
     float yOffset;
 } Tile;
 
-#define TILE_MAX 500
+#define TILE_MAX (6*1024)
 
 static Renderer renderer = {0};
 static Vec2f cameraPos = {0};
+static Vec2f cameraVel = {0};
 static float cameraZoom = 1.0f;
 static Tile tiles[TILE_MAX];
 static size_t tileCount = 0;
@@ -66,6 +68,16 @@ void renderTiles(Tile *t, size_t tCount) {
 
 void screenToTile(Vec2f screen) {
     
+}
+
+void addTile(Vec2i tile, Vec2i texture, float yOff) {
+    assert(tileCount < TILE_MAX);
+    Tile t = {
+        .location = tile,
+        .texture = texture,
+        .yOffset = yOff
+    };
+    tiles[tileCount++] = t;
 }
 
 int main() {
@@ -114,12 +126,8 @@ int main() {
 
     for (int y = -10; y < 10; y++) {
         for (int x = -10; x < 10; x++) {
-            Tile t = {
-                .location = vec2i(x, y),
-                .texture = vec2i(x % TILES_ROW, y % TILES_COL),
-                .yOffset = 0.0f
-            };
-            tiles[tileCount++] = t;
+            addTile(vec2i(x, y), vec2i(0, 8), 0.0f);
+            addTile(vec2i(x, y), vec2i(1, 6), TILE_HEIGHT/2.0f);
         }
     }
     qsort(tiles, tileCount, sizeof(Tile), cmpTile);
@@ -164,9 +172,38 @@ int main() {
                 case SDL_QUIT: {
                     running = false;
                 } break;
+
+                case SDL_KEYDOWN: {
+                    const float UNITS = 100.0f;
+                    switch (event.key.keysym.sym) {
+                    }
+                } break;
+
+                case SDL_MOUSEWHEEL: {
+                    cameraZoom += event.wheel.y * 0.5f;
+                    cameraZoom = clampf(cameraZoom, 0.5f, 10.0f);
+                } break;
+
+                default: {}
             }
         }
 
+        const Uint8 *keystate = SDL_GetKeyboardState(NULL);
+        const float SPEED = 100.0f;
+        if (keystate[SDL_SCANCODE_A]) {
+            cameraVel.x -= SPEED;
+        } else if (keystate[SDL_SCANCODE_D]) {
+            cameraVel.x += SPEED;
+        }
+        if (keystate[SDL_SCANCODE_W]) {
+            cameraVel.y += SPEED;
+        } else if (keystate[SDL_SCANCODE_S]) {
+            cameraVel.y -= SPEED;
+        }
+
+        cameraPos = vec2fAdd(cameraPos, vec2fMul(cameraVel, vec2fs(DELTA_TIME)));
+        cameraVel = vec2fs(0.0f);
+        
         glClearColor(0.0f, 0.15f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -175,7 +212,7 @@ int main() {
 
         for (size_t i = 0; i < tileCount; i++) {
             Tile *t = &tiles[i];
-            t->yOffset = 5.0f * (sin(SDL_GetTicks() * 0.01f + t->location.y) + cos(SDL_GetTicks() * 0.01f + t->location.x));
+            t->yOffset += (sin(SDL_GetTicks() * 0.01f + t->location.y) + cos(SDL_GetTicks() * 0.01f + t->location.x));
         }
 
         rendererUse(&renderer);
