@@ -94,3 +94,8 @@ Vec4f vec4fDiv(Vec4f a, Vec4f b) {
 float lerpf(float a, float b, float t) {
     return a + (b - a) * t;
 }
+
+float clampf(float v, float min, float max) {
+    const float t = v < min ? min : v;
+    return t > max ? max : t;
+}

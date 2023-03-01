@@ -37,5 +37,6 @@ Vec4f vec4fMul(Vec4f a, Vec4f b);
 Vec4f vec4fDiv(Vec4f a, Vec4f b);
 
 float lerpf(float a, float b, float t);
+float clampf(float v, float min, float max);
 
 #endif

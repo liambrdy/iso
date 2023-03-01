@@ -13,7 +13,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 LIBS := sdl2 glew
 LDFLAGS ?= -lm `pkg-config --libs $(LIBS)`
 
-CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -ggdb `pkg-config --cflags $(LIBS)`
+CPPFLAGS ?= $(INC_FLAGS) -Wall -MMD -MP -ggdb `pkg-config --cflags $(LIBS)`
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)

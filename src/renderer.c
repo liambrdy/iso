@@ -138,8 +138,8 @@ void rendererInit(Renderer *r) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*RENDERER_VERTEX_BUFFER_CAP, NULL, GL_DYNAMIC_DRAW);
 
     for (size_t i = 0; i < COUNT_VERTEX_ATTR; i++) {
-        glEnableVertexAttribArray(i);
-        glVertexAttribPointer(i, vertexAttrDefs[i].comps, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) vertexAttrDefs[i].offset);
+        glEnableVertexAttribArray((GLuint) i);
+        glVertexAttribPointer((GLuint) i, (GLint) vertexAttrDefs[i].comps, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) vertexAttrDefs[i].offset);
     }
 
     GLuint shaders[2] = {0};
@@ -206,7 +206,7 @@ void rendererSync(Renderer *r) {
 }
 
 void rendererDraw(Renderer *r) {
-    glDrawArrays(GL_TRIANGLES, 0, r->vertexCount);
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei) r->vertexCount);
 }
 
 void rendererFlush(Renderer *r) {
