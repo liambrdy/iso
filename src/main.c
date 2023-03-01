@@ -227,6 +227,11 @@ int main(int argc, char **argv) {
 
         rendererFlush(&renderer);
 
+        rendererLineUse(&renderer);
+        glUniform2f(renderer.lineUniforms[UNIFORM_SLOT_RESOLUTION], (float) w, (float) h);
+        glUniform2f(renderer.lineUniforms[UNIFORM_SLOT_CAMERA_POS], cameraPos.x, cameraPos.y);
+        glUniform1f(renderer.lineUniforms[UNIFORM_SLOT_CAMERA_ZOOM], cameraZoom);
+
         rendererLine(&renderer, vec2fs(0.0f), vec2f(100.0f, 100.0f), vec4f(1.0f, 0.0f, 0.0f, 1.0f), vec4f(0.0f, 0.0f, 1.0f, 1.0f));
         rendererLineSync(&renderer);
 
