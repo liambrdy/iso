@@ -28,15 +28,37 @@ typedef struct {
 
 #define RENDERER_VERTEX_BUFFER_CAP (3*600*1024)
 
+typedef enum {
+    LINE_ATTR_POSITION = 0,
+    LINE_ATTR_COLOR,
+    COUNT_LINE_VERTEX_ATTR
+} LineVertexAttr;
+
+typedef struct {
+    Vec2f pos;
+    Vec4f color;
+} LineVertex;
+
+#define RENDERER_LINE_VERTEX_BUFFER_CAP (2*600*1024)
+
 typedef struct {
     GLuint vao;
     GLuint vbo;
 
+    GLuint lineVao;
+    GLuint lineVbo;
+
     GLuint program;
     GLint uniforms[COUNT_UNIFORM_SLOT];
 
+    GLuint lineProgram;
+    GLint lineUniforms[COUNT_UNIFORM_SLOT];
+
     Vertex vertices[RENDERER_VERTEX_BUFFER_CAP];
     size_t vertexCount;
+
+    LineVertex lineVertices[RENDERER_LINE_VERTEX_BUFFER_CAP];
+    size_t lineVertexCount;
 } Renderer;
 
 void rendererInit(Renderer *r);
@@ -57,5 +79,12 @@ void rendererQuad(Renderer *r,
 void rendererRect(Renderer *r, Vec2f p, Vec2f size, Vec4f c);
 void rendererTexturedRect(Renderer *r, Vec2f p, Vec2f size, Vec2f uv, Vec2f uvs, Vec4f c);
 void rendererRectCentered(Renderer *r, Vec2f p, Vec2f size, Vec4f c);
+
+void rendererLineVertex(Renderer *r, Vec2f p, Vec4f c);
+void rendererLine(Renderer *r, Vec2f p0, Vec2f p1, Vec4f c0, Vec4f c1);
+void rendererLineUse(Renderer *r);
+void rendererLineSync(Renderer *r);
+void rendererLineDraw(Renderer *r);
+void rendererLineFlush(Renderer *r);
 
 #endif

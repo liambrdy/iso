@@ -28,6 +28,18 @@ static const AttrDef vertexAttrDefs[COUNT_VERTEX_ATTR] = {
 };
 static_assert(COUNT_VERTEX_ATTR == 3, "More vertex attributes have been added");
 
+static const AttrDef lineVertexAttrDefs[COUNT_LINE_VERTEX_ATTR] = {
+    [LINE_ATTR_POSITION] = {
+        .offset = offsetof(LineVertex, pos),
+        .comps = 2
+    },
+    [LINE_ATTR_COLOR] = {
+        .offset = offsetof(LineVertex, color),
+        .comps = 4
+    }
+};
+static_assert(COUNT_LINE_VERTEX_ATTR == 2, "More line vertex attributes have been aded");
+
 typedef struct {
     UniformSlot slot;
     const char *name;
@@ -150,6 +162,37 @@ void rendererInit(Renderer *r) {
     for (int i = 0; i < COUNT_UNIFORM_SLOT; i++) {
         r->uniforms[i] = glGetUniformLocation(r->program, uniformDefs[i].name);
     }
+
+    glCreateVertexArrays(1, &r->lineVao);
+    glBindVertexArray(r->lineVao);
+    glCreateBuffers(1, &r->lineVbo);
+    glBindBuffer(GL_ARRAY_BUFFER, r->lineVbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * RENDERER_LINE_VERTEX_BUFFER_CAP, NULL, GL_DYNAMIC_DRAW);
+
+    for (size_t i = 0; i < COUNT_LINE_VERTEX_ATTR; i++) {
+        glEnableVertexAttribArray(i);
+        glVertexAttribPointer(i, lineVertexAttrDefs[i].comps, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) lineVertexAttrDefs[i].offset);
+    }
+
+    if (!compileShaderFile("shaders/line.vert", GL_VERTEX_SHADER, &shaders[0])) {
+        exit(1);
+    }
+
+    if (!compileShaderFile("shaders/line.frag", GL_FRAGMENT_SHADER, &shaders[1])) {
+        exit(1);
+    }
+
+    r->lineProgram = glCreateProgram();
+    attachShadersToProgram(shaders, sizeof(shaders)/sizeof(shaders[0]), r->lineProgram);
+    if (!linkProgram(r->lineProgram, __FILE__, __LINE__)) {
+        exit(1);
+    }
+    glDeleteShader(shaders[0]);
+    glDeleteShader(shaders[1]);
+
+    for (int i = 0; i < COUNT_UNIFORM_SLOT; i++) {
+        r->lineUniforms[i] = glGetUniformLocation(r->lineProgram, uniformDefs[i].name);
+    }
 }
 
 void rendererUse(Renderer *r) {
@@ -224,4 +267,41 @@ void rendererRectCentered(Renderer *r, Vec2f p, Vec2f size, Vec4f c) {
         vec2fSub(p, vec2fDiv(size, vec2fs(2.0))),
         size, c
     );
+}
+
+void rendererLineVertex(Renderer *r, Vec2f p, Vec4f c) {
+    if (r->lineVertexCount > RENDERER_LINE_VERTEX_BUFFER_CAP) {
+        rendererLineFlush(r);
+    }
+
+    LineVertex v = {
+        .pos = p,
+        .color = c
+    };
+    r->lineVertices[r->lineVertexCount++] = v;
+}
+
+void rendererLine(Renderer *r, Vec2f p0, Vec2f p1, Vec4f c0, Vec4f c1) {
+    rendererLineVertex(r, p0, c0);
+    rendererLineVertex(r, p1, c1);
+}
+
+void rendererLineUse(Renderer *r) {
+    glBindVertexArray(r->lineVao);
+    glBindBuffer(GL_ARRAY_BUFFER, r->lineVbo);
+    glUseProgram(r->lineProgram);
+}
+
+void rendererLineSync(Renderer *r) {
+    glBufferSubData(GL_ARRAY_BUFFER, 0, r->lineVertexCount * sizeof(LineVertex), r->lineVertices);
+}
+
+void rendererLineDraw(Renderer *r) {
+    glDrawArrays(GL_LINES, 0, r->lineVertexCount);
+}
+
+void rendererLineFlush(Renderer *r) {
+    rendererLineUse(r);
+    rendererLineSync(r);
+    rendererLineDraw(r);
 }

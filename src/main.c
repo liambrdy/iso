@@ -53,7 +53,11 @@ static size_t tileCount = 0;
 static int cmpTile(const void *a, const void *b) {
     Tile ta = *(const Tile *)a;
     Tile tb = *(const Tile *)b;
+#ifdef _WIN32
+    return ta.location.y < tb.location.y;
+#else
     return ta.location.x + ta.location.y < tb.location.x + tb.location.y;
+#endif
 }
 
 void renderTiles(Tile *t, size_t tCount) {
@@ -116,7 +120,7 @@ int main() {
         for (int x = -10; x < 10; x++) {
             Tile t = {
                 .location = vec2i(x, y),
-                .texture = vec2i(x % TILES_ROW, y % TILES_COL),
+                .texture = vec2i(0, 8),
                 .yOffset = 0.0f
             };
             tiles[tileCount++] = t;
@@ -187,6 +191,9 @@ int main() {
         renderTiles(tiles, tileCount);
 
         rendererFlush(&renderer);
+
+        rendererLine(&renderer, vec2fs(0.0f), vec2f(100.0f, 100.0f), vec4f(1.0f, 0.0f, 0.0f, 1.0f), vec4f(0.0f, 0.0f, 1.0f, 1.0f));
+        rendererLineSync(&renderer);
 
         SDL_GL_SwapWindow(window);
 
